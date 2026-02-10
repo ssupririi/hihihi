@@ -195,16 +195,7 @@ function minimax(newBoard, player){
 function computerMove(){
   if(gameOver) return;
 
-  let moveChance = Math.random();
-  let bestSpot;
-
-  if(moveChance < 0.90){
-    bestSpot = minimax([...board],"O").index;
-  } 
-  else {
-    const empty = board.map((v,i)=> v===""? i:null).filter(v=>v!==null);
-    bestSpot = empty[Math.floor(Math.random()*empty.length)];
-  }
+  let bestSpot = minimax([...board],"O").index;
 
   if(bestSpot === undefined) return;
 
