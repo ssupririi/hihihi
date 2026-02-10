@@ -41,7 +41,25 @@
   <button id="tryAgainBtn">🔄</button>
 
   <script>
+    const cells = document.querySelectorAll('.cell');
+    const resetBtn = document.querySelector('.reset');
+    const popup = document.getElementById('popup');
+    const celebrationPopup = document.getElementById('celebrationPopup');
+    const yesBtn = document.getElementById("yesBtn");
+    const tryAgainBtn = document.getElementById("tryAgainBtn");
     const noBtn = document.getElementById("noBtn");
+
+    let board = Array(9).fill("");
+    let currentPlayer = "X";
+    let gameOver = false; // prevents clicks after game ends
+
+    const winCombos = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    // "No" button dodging
     noBtn.addEventListener("mouseenter", () => {
       const maxX = 150;
       const maxY = 50; 
@@ -53,21 +71,7 @@
       noBtn.style.transform = "translate(0,0)";
     });
 
-    const cells = document.querySelectorAll('.cell');
-    const resetBtn = document.querySelector('.reset');
-    const popup = document.getElementById('popup');
-    const celebrationPopup = document.getElementById('celebrationPopup');
-    const yesBtn = document.getElementById("yesBtn");
-    const tryAgainBtn = document.getElementById("tryAgainBtn");
-    let board = ["", "", "", "", "", "", "", "", ""];
-    let currentPlayer = "X";
-
-    const winCombos = [
-      [0,1,2], [3,4,5], [6,7,8], 
-      [0,3,6], [1,4,7], [2,5,8], 
-      [0,4,8], [2,4,6]           
-    ];
-
+    // Check win
     function checkWin(player) {
       return winCombos.some(combo => combo.every(i => board[i] === player));
     }
@@ -76,8 +80,18 @@
       return board.every(cell => cell !== "");
     }
 
-    function showPopup() { popup.style.display = "block"; }
+    // Show popup with winner
+    function showPopup(winner) {
+      gameOver = true;
+      if(winner === "X") {
+        popup.querySelector("h2").textContent = "Yayy! 💕 Will you be my Valentine?";
+      } else if(winner === "O") {
+        popup.querySelector("h2").textContent = "Awh! Keep up duh!";
+      }
+      popup.style.display = "block";
+    }
 
+    // Reset game
     function resetGame() {
       board.fill("");
       cells.forEach(cell => cell.textContent = "");
@@ -85,37 +99,43 @@
       popup.style.display = "none";
       celebrationPopup.style.display = "none";
       tryAgainBtn.style.display = "none";
+      gameOver = false;
     }
 
+    // Player move
     cells.forEach(cell => {
       cell.addEventListener('click', () => {
         const index = cell.dataset.index;
-        if (board[index] === "") {
+        if(board[index] === "" && !gameOver) {
           board[index] = currentPlayer;
           cell.textContent = currentPlayer;
 
-          if (checkWin(currentPlayer)) {
-            showPopup();
-          } else if (checkTie()) {
+          if(checkWin(currentPlayer)) {
+            showPopup(currentPlayer);
+          } else if(checkTie()) {
             alert("Skill issue. Try again hmp!");
             resetGame();
           } else {
-            currentPlayer = currentPlayer === "X" ? "O" : "X";
-            if (currentPlayer === "O") computerMove();
+            currentPlayer = "O";
+            setTimeout(computerMove, 300); 
           }
         }
       });
     });
 
+    // Computer move
     function computerMove() {
+      if(gameOver) return;
       const empty = board.map((val, idx) => val === "" ? idx : null).filter(val => val !== null);
+      if(empty.length === 0) return;
+
       const choice = empty[Math.floor(Math.random() * empty.length)];
       board[choice] = "O";
       cells[choice].textContent = "O";
 
-      if (checkWin("O")) {
-        showPopup();
-      } else if (checkTie()) {
+      if(checkWin("O")) {
+        showPopup("O");
+      } else if(checkTie()) {
         alert("Skill issue. Try again hmp!");
         resetGame();
       } else {
@@ -123,39 +143,30 @@
       }
     }
 
+    // Buttons
     resetBtn.addEventListener('click', resetGame);
+    tryAgainBtn.addEventListener("click", resetGame);
 
     yesBtn.addEventListener("click", () => {
       celebrationPopup.style.display = "block";
-
       const fireworkCount = 500; 
       const colors = ["#ff69b4", "#ff1493", "#ffb6c1", "#fff0f5", "#ffc0cb"];
       for (let i = 0; i < fireworkCount; i++) {
         const fw = document.createElement("div");
         fw.classList.add("firework-piece");
         fw.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-
         const angle = Math.random() * 2 * Math.PI;
         const distance = 150 + Math.random() * 100;
         const x = Math.cos(angle) * distance;
         const y = Math.sin(angle) * distance;
         const rot = Math.random() * 720 + "deg";
-
         fw.style.setProperty("--x", x + "px");
         fw.style.setProperty("--y", y + "px");
         fw.style.setProperty("--rot", rot);
-
         document.body.appendChild(fw);
         setTimeout(() => fw.remove(), 1000);
       }
-
-      setTimeout(() => {
-        tryAgainBtn.style.display = "block";
-      }, 1000);
-    });
-
-    tryAgainBtn.addEventListener("click", () => {
-      resetGame();
+      setTimeout(() => tryAgainBtn.style.display = "block", 1000);
     });
   </script>
 </body>
